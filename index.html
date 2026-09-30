@@ -1,0 +1,754 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Racha BR: Supercarros</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Press Start 2P', monospace;
+      image-rendering: pixelated;
+      user-select: none;
+      touch-action: manipulation;
+    }
+
+    body {
+      background: #05050a;
+      color: #fff;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      padding: 6px;
+    }
+
+    #game-container {
+      width: 100%;
+      max-width: 480px;
+      background: #0b101d;
+      border: 4px solid #009c3b;
+      border-radius: 8px;
+      padding: 8px;
+      position: relative;
+      box-shadow: 0 0 15px rgba(0, 156, 59, 0.3);
+    }
+
+    .br-stripe {
+      height: 4px;
+      background: linear-gradient(90deg, #009c3b 50%, #ffdf00 50%);
+      margin-bottom: 6px;
+      border-radius: 2px;
+    }
+
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: #000;
+      padding: 6px;
+      border: 2px solid #ffdf00;
+      margin-bottom: 6px;
+    }
+
+    h1 {
+      font-size: 0.52rem;
+      color: #ffdf00;
+      text-shadow: 2px 2px #009c3b;
+    }
+
+    .btn-ad-mini {
+      background: linear-gradient(135deg, #ffdf00, #ff8800);
+      color: #000;
+      border: 1px solid #fff;
+      padding: 4px 6px;
+      font-size: 0.38rem;
+      font-weight: bold;
+      cursor: pointer;
+      border-radius: 3px;
+    }
+
+    .btn-opt {
+      background: #1f2338;
+      color: #00ff66;
+      border: 1px solid #00ff66;
+      padding: 4px 6px;
+      font-size: 0.4rem;
+      cursor: pointer;
+    }
+
+    .driver-profile {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: #121824;
+      border: 2px solid #009c3b;
+      padding: 6px;
+      margin-bottom: 6px;
+    }
+
+    .avatar-display {
+      width: 40px;
+      height: 40px;
+      background: #000;
+      border: 2px solid #ffdf00;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 1.2rem;
+      cursor: pointer;
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 4px;
+      flex: 1;
+      font-size: 0.38rem;
+    }
+
+    .stats-grid div span {
+      display: block;
+      color: #8a99ad;
+      margin-bottom: 2px;
+    }
+
+    .val-money { color: #00ff66; }
+    .val-hp { color: #00f0ff; }
+    .val-loan { color: #ff0055; }
+
+    .track-box {
+      width: 100%;
+      height: 200px;
+      background: #000;
+      border: 3px solid #ffdf00;
+      position: relative;
+      margin-bottom: 6px;
+      overflow: hidden;
+    }
+
+    canvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    .status-banner {
+      position: absolute;
+      top: 6px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(0, 0, 0, 0.85);
+      border: 2px solid #00ff66;
+      color: #00ff66;
+      padding: 3px 6px;
+      font-size: 0.42rem;
+      z-index: 10;
+      text-align: center;
+    }
+
+    .speedometer {
+      position: absolute;
+      bottom: 6px;
+      right: 8px;
+      background: rgba(0, 0, 0, 0.85);
+      border: 2px solid #ffdf00;
+      color: #ffdf00;
+      padding: 4px 8px;
+      font-size: 0.55rem;
+      z-index: 10;
+      text-align: right;
+    }
+
+    .speedometer span {
+      font-size: 0.35rem;
+      color: #fff;
+      display: block;
+    }
+
+    .nav-tabs {
+      display: flex;
+      gap: 4px;
+      margin-bottom: 6px;
+    }
+
+    .tab-btn {
+      flex: 1;
+      background: #151d2a;
+      border: 1px solid #009c3b;
+      color: #fff;
+      padding: 6px 2px;
+      font-size: 0.38rem;
+      cursor: pointer;
+      text-align: center;
+    }
+
+    .tab-btn.active {
+      background: #009c3b;
+      color: #fff;
+      font-weight: bold;
+    }
+
+    .panel-content {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+      max-height: 150px;
+      overflow-y: auto;
+    }
+
+    button.action-btn {
+      background: linear-gradient(180deg, #1f2a3a, #0d1420);
+      color: #fff;
+      border: 2px solid #009c3b;
+      padding: 8px;
+      font-size: 0.36rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      cursor: pointer;
+    }
+
+    button.action-btn:active {
+      transform: translateY(1px);
+    }
+
+    .race-controls {
+      display: none;
+      gap: 6px;
+      align-items: center;
+    }
+
+    .btn-gear {
+      background: #1a1a2e;
+      border: 2px solid #ffdf00;
+      color: #ffdf00;
+      width: 50px;
+      height: 55px;
+      font-size: 0.8rem;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .btn-pedal {
+      flex: 1;
+      background: #0d1f10;
+      border: 2px solid #00ff66;
+      color: #00ff66;
+      height: 55px;
+      font-size: 0.6rem;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .btn-pedal.active {
+      background: #00ff66;
+      color: #000;
+    }
+
+    .console-log {
+      background: #000;
+      border: 2px solid #222;
+      height: 50px;
+      padding: 4px;
+      font-size: 0.38rem;
+      overflow-y: auto;
+      margin-bottom: 6px;
+      line-height: 1.4;
+    }
+
+    .overlay {
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(5, 8, 15, 0.95);
+      z-index: 30;
+      padding: 10px;
+      display: none;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .avatar-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    .avatar-item {
+      background: #111;
+      border: 2px solid #444;
+      font-size: 1.8rem;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 10px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+
+<div id="game-container">
+  <div class="br-stripe"></div>
+  <header>
+    <h1>🇧🇷 RACHA BR: SUPERCARROS 🇧🇷</h1>
+    <div style="display:flex; gap:4px; align-items:center;">
+      <button id="btn-ad" class="btn-ad-mini" onclick="watchRewardAd()">📺 +R$100</button>
+      <button class="btn-opt" onclick="toggleSettings()">⚙️</button>
+    </div>
+  </header>
+
+  <!-- TELA CONFIGS -->
+  <div id="settings-screen" class="overlay">
+    <h3 style="color:#ffdf00; text-align:center; font-size:0.55rem;">⚙️ CONFIGURAÇÕES</h3>
+    <div style="font-size:0.45rem; display:flex; justify-content:space-between; align-items:center;">
+      <span>CÂMERA:</span>
+      <select id="cfg-camera" onchange="saveSettings()" style="background:#000; color:#fff; border:1px solid #009c3b; font-size:0.4rem; padding:2px;">
+        <option value="2D">2D Lateral BR</option>
+        <option value="3D">3D Traseira</option>
+      </select>
+    </div>
+    <button class="action-btn" onclick="toggleSettings()" style="justify-content:center; margin-top:15px;">VOLTAR</button>
+  </div>
+
+  <!-- SELEÇÃO DE AVATAR -->
+  <div id="avatar-screen" class="overlay">
+    <h3 style="color:#ffdf00; text-align:center; font-size:0.5rem;">👤 PILOTO BRASILEIRO</h3>
+    <div class="avatar-grid">
+      <div class="avatar-item" onclick="selectAvatar('😎')">😎</div>
+      <div class="avatar-item" onclick="selectAvatar('🏎️')">🏎️</div>
+      <div class="avatar-item" onclick="selectAvatar('👨‍🔧')">👨‍🔧</div>
+      <div class="avatar-item" onclick="selectAvatar('👑')">👑</div>
+      <div class="avatar-item" onclick="selectAvatar('💀')">💀</div>
+      <div class="avatar-item" onclick="selectAvatar('🔥')">🔥</div>
+      <div class="avatar-item" onclick="selectAvatar('🇧🇷')">🇧🇷</div>
+      <div class="avatar-item" onclick="selectAvatar('⚡')">⚡</div>
+    </div>
+    <button class="action-btn" onclick="toggleAvatarScreen()" style="justify-content:center; margin-top:15px;">CONFIRMAR</button>
+  </div>
+
+  <!-- PAINEL DO PILOTO -->
+  <div class="driver-profile">
+    <div class="avatar-display" id="profile-avatar" onclick="toggleAvatarScreen()">😎</div>
+    <div class="stats-grid">
+      <div><span>CARRO:</span><strong id="ui-car" style="color:#ffdf00;">Uno Firma</strong></div>
+      <div><span>POTÊNCIA:</span><strong id="ui-hp" class="val-hp">55 cv</strong></div>
+      <div><span>MARCHA:</span><strong id="ui-gear" style="color:#00f0ff;">N</strong></div>
+      <div><span>CARTEIRA:</span><strong id="ui-money" class="val-money">R$ 3.000</strong></div>
+      <div><span>DÍVIDA:</span><strong id="ui-loan" class="val-loan">R$ 0</strong></div>
+      <div><span>NÍVEL:</span><strong id="ui-rep" style="color:#ffdf00;">Lvl 1</strong></div>
+    </div>
+  </div>
+
+  <!-- PISTA CANVAS COM VELOCÍMETRO -->
+  <div class="track-box">
+    <div class="status-banner" id="status-banner">PREPARADO PRO RACHA?</div>
+    <div class="speedometer"><div id="ui-speed">0</div><span>KM/H</span></div>
+    <canvas id="raceCanvas" width="400" height="200"></canvas>
+  </div>
+
+  <div class="console-log" id="log-box">
+    <p style="color:#00ff66;">🏁 Você começou com R$ 3.000 na conta! Aproveite para acelerar!</p>
+  </div>
+
+  <!-- NAVEGAÇÃO BETWEEN TABS -->
+  <div class="nav-tabs" id="main-tabs">
+    <div class="tab-btn active" onclick="switchTab('racha')">🏁 RACHAS</div>
+    <div class="tab-btn" onclick="switchTab('garagem')">🏎️ GARAGEM</div>
+    <div class="tab-btn" onclick="switchTab('banco')">🏦 BANCO</div>
+  </div>
+
+  <!-- ABA: RACHAS -->
+  <div id="tab-racha" class="panel-content">
+    <button class="action-btn" onclick="startRace('Corsa Wind 1.0', 44, 50)">
+      <span>🏁 Corsa 1.0 (Muito Fácil)</span><span>Aposta: R$ 50</span>
+    </button>
+    <button class="action-btn" onclick="startRace('Gol GTS 1.8', 85, 250)">
+      <span>🏁 Gol GTS 1.8 (Fácil)</span><span>Aposta: R$ 250</span>
+    </button>
+    <button class="action-btn" onclick="startRace('DMW M3', 280, 2500)">
+      <span>🏁 DMW M3 (Desafiador)</span><span>Aposta: R$ 2.500</span>
+    </button>
+    <button class="action-btn" onclick="startRace('Fernari F40', 520, 15000)">
+      <span>🏁 Fernari F40 (Extremo)</span><span>Aposta: R$ 15.000</span>
+    </button>
+  </div>
+
+  <!-- ABA: GARAGEM / CARROS & UPGRADES -->
+  <div id="tab-garagem" class="panel-content" style="display:none;">
+    <button class="action-btn" onclick="buyUpgrade('Filtro Esportivo + Escada', 15, 1500)">
+      <span>🛠️ Filtro + Escada (+15 cv)</span><span>R$ 1.500</span>
+    </button>
+    <button class="action-btn" onclick="buyUpgrade('Comando 282 + Weber', 35, 8000)">
+      <span>🛠️ Comando + Weber (+35 cv)</span><span>R$ 8.000</span>
+    </button>
+    <button class="action-btn" onclick="buyUpgrade('Kit Turbo Forjado 1.5 Bar', 120, 25000)">
+      <span>🛠️ Kit Turbo Forjado (+120 cv)</span><span>R$ 25.000</span>
+    </button>
+    <button class="action-btn" onclick="buyCar('Corsa Wind', 75, 15000)">
+      <span>🚗 Corsa Wind 1.0 (75cv)</span><span>R$ 15.000</span>
+    </button>
+    <button class="action-btn" onclick="buyCar('Gol GTS 1.8', 120, 32000)">
+      <span>🚗 Gol GTS 1.8 (120cv)</span><span>R$ 32.000</span>
+    </button>
+    <button class="action-btn" onclick="buyCar('DMW M3', 350, 75000)">
+      <span>🚙 DMW M3 Sport (350cv)</span><span>R$ 75.000</span>
+    </button>
+    <button class="action-btn" onclick="buyCar('Fernari F40', 520, 160000)">
+      <span>🏎️️ Fernari F40 (520cv)</span><span>R$ 160.000</span>
+    </button>
+    <button class="action-btn" onclick="buyCar('Malaren 720S', 720, 250000)">
+      <span>🏎️ Malaren 720S (720cv)</span><span>R$ 250.000</span>
+    </button>
+  </div>
+
+  <!-- ABA: BANCO / EMPRÉSTIMOS -->
+  <div id="tab-banco" class="panel-content" style="display:none;">
+    <button class="action-btn" onclick="takeLoan(500, 650)">
+      <span>🏦 Empréstimo Peq. R$ 500</span><span>Paga: R$ 650</span>
+    </button>
+    <button class="action-btn" onclick="takeLoan(10000, 13000)">
+      <span>🏦 Empréstimo Méd. R$ 10.000</span><span>Paga: R$ 13.000</span>
+    </button>
+    <button class="action-btn" onclick="takeLoan(100000, 135000)">
+      <span>🏦 Empréstimo Alto R$ 100.000</span><span>Paga: R$ 135.000</span>
+    </button>
+    <button class="action-btn" onclick="payLoan()" style="border-color:#00ff66;">
+      <span>💳 Quitar Dívida Bancária</span><span>Pagar Banco</span>
+    </button>
+  </div>
+
+  <!-- CONTROLES DE DENTRO DA CORRIDA -->
+  <div class="race-controls" id="race-controls">
+    <button class="btn-gear" onclick="changeGear(-1)">-</button>
+    <button class="btn-pedal" id="btn-pedal">⛽ ACELERAR</button>
+    <button class="btn-gear" onclick="changeGear(1)">+</button>
+  </div>
+
+</div>
+
+<script>
+  const canvas = document.getElementById('raceCanvas');
+  const ctx = canvas.getContext('2d');
+
+  let state = {
+    avatar: '😎',
+    car: 'Uno Firma',
+    hp: 55,
+    money: 3000,
+    loan: 0,
+    rep: 1,
+    gear: 0,
+    isRacing: false,
+    accelerating: false,
+    pSpeed: 0,
+    eSpeed: 0,
+    pDistance: 0,
+    eDistance: 0,
+    raceState: 'idle',
+    enemyCar: '',
+    enemyHp: 0,
+    bet: 0,
+    settings: { camera: '2D' }
+  };
+
+  const btnPedal = document.getElementById('btn-pedal');
+  const startAcc = (e) => { e.preventDefault(); state.accelerating = true; btnPedal.classList.add('active'); };
+  const stopAcc = (e) => { e.preventDefault(); state.accelerating = false; btnPedal.classList.remove('active'); };
+  
+  btnPedal.addEventListener('mousedown', startAcc);
+  btnPedal.addEventListener('mouseup', stopAcc);
+  btnPedal.addEventListener('touchstart', startAcc);
+  btnPedal.addEventListener('touchend', stopAcc);
+
+  function log(msg, color="#fff") {
+    const b = document.getElementById('log-box');
+    b.innerHTML = `<p style="color:${color};">${msg}</p>` + b.innerHTML;
+  }
+
+  function toggleSettings() {
+    const el = document.getElementById('settings-screen');
+    el.style.display = el.style.display === 'flex' ? 'none' : 'flex';
+  }
+
+  function toggleAvatarScreen() {
+    const el = document.getElementById('avatar-screen');
+    el.style.display = el.style.display === 'flex' ? 'none' : 'flex';
+  }
+
+  function selectAvatar(emoji) {
+    state.avatar = emoji;
+    document.getElementById('profile-avatar').innerText = emoji;
+    toggleAvatarScreen();
+    log(`👤 Avatar alterado!`, "#ffdf00");
+  }
+
+  function saveSettings() {
+    state.settings.camera = document.getElementById('cfg-camera').value;
+  }
+
+  function watchRewardAd() {
+    const adBtn = document.getElementById('btn-ad');
+    adBtn.disabled = true;
+    log("📺 Exibindo anúncio patrocinado...", "#ffdf00");
+    
+    setTimeout(() => {
+      state.money += 100;
+      updateUI();
+      log("💰 Anúncio concluído! Recebeu R$ 100!", "#00ff66");
+      adBtn.disabled = false;
+    }, 2000);
+  }
+
+  function switchTab(tabName) {
+    document.getElementById('tab-racha').style.display = 'none';
+    document.getElementById('tab-garagem').style.display = 'none';
+    document.getElementById('tab-banco').style.display = 'none';
+    
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+
+    document.getElementById('tab-' + tabName).style.display = 'flex';
+    event.target.classList.add('active');
+  }
+
+  function takeLoan(amount, payBack) {
+    if (state.loan > 0) { log("⚠️ Quite seu empréstimo pendente antes de outro!", "#ff0055"); return; }
+    state.money += amount;
+    state.loan = payBack;
+    updateUI();
+    log(`🏦 Empréstimo de R$ ${amount.toLocaleString('pt-BR')} liberado!`, "#00ff66");
+  }
+
+  function payLoan() {
+    if (state.loan <= 0) { log("⚠️ Nenhuma dívida pendente!", "#00f0ff"); return; }
+    if (state.money < state.loan) { log("⚠️ Saldo insuficiente para quitar o banco!", "#ff0055"); return; }
+    state.money -= state.loan;
+    state.loan = 0;
+    updateUI();
+    log("💳 Empréstimo quitado na totalidade!", "#00ff66");
+  }
+
+  function buyCar(carName, hp, cost) {
+    if (state.money < cost) { log("⚠️ Saldo insuficiente para este super carro!", "#ff0055"); return; }
+    state.money -= cost;
+    state.car = carName;
+    state.hp = hp;
+    updateUI();
+    log(`🏎️ Novo monstro na garagem: ${carName}!`, "#00ff66");
+  }
+
+  function buyUpgrade(name, hpGain, cost) {
+    if (state.money < cost) { log("⚠️ Saldo insuficiente!", "#ff0055"); return; }
+    state.money -= cost;
+    state.hp += hpGain;
+    updateUI();
+    log(`🛠️ ${name} instalado! +${hpGain} cv!`, "#00ff66");
+  }
+
+  function changeGear(dir) {
+    if (!state.isRacing) return;
+    state.gear = Math.max(1, Math.min(4, state.gear + dir));
+    updateUI();
+  }
+
+  function updateUI() {
+    document.getElementById('ui-car').innerText = state.car;
+    document.getElementById('ui-hp').innerText = state.hp + " cv";
+    document.getElementById('ui-money').innerText = "R$ " + state.money.toLocaleString('pt-BR');
+    document.getElementById('ui-loan').innerText = "R$ " + state.loan.toLocaleString('pt-BR');
+    document.getElementById('ui-rep').innerText = "Lvl " + state.rep;
+    document.getElementById('ui-gear').innerText = state.gear === 0 ? 'N' : state.gear;
+    
+    let kmh = Math.round(state.pSpeed * 180);
+    document.getElementById('ui-speed').innerText = kmh;
+  }
+
+  function startRace(enemy, enemyHp, bet) {
+    if (state.money < bet) { log("⚠️ Faltou grana para cobrir a aposta!", "#ff0055"); return; }
+
+    state.money -= bet;
+    state.bet = bet;
+    state.enemyCar = enemy;
+    state.enemyHp = enemyHp;
+    
+    state.isRacing = true;
+    state.pDistance = 0;
+    state.eDistance = 0;
+    state.pSpeed = 0;
+    state.eSpeed = 0;
+    state.gear = 1;
+    state.raceState = 'ready';
+
+    document.getElementById('main-tabs').style.display = 'none';
+    document.getElementById('tab-racha').style.display = 'none';
+    document.getElementById('race-controls').style.display = 'flex';
+    document.getElementById('status-banner').innerText = "ALINHANDO NA AVENIDA...";
+
+    updateUI();
+    log(`🏁 Racha valendo R$ ${bet.toLocaleString('pt-BR')} contra ${enemy}!`, "#00f0ff");
+
+    setTimeout(() => {
+      state.raceState = 'set';
+      document.getElementById('status-banner').innerText = "ATENÇÃO...";
+
+      setTimeout(() => {
+        state.raceState = 'go';
+        document.getElementById('status-banner').innerText = "ACELERA!!";
+      }, 1000);
+    }, 1000);
+  }
+
+  function drawUno(c, x, y, isPlayer) {
+    c.save(); c.translate(x, y);
+    c.fillStyle = "#fff"; c.fillRect(0, 0, 40, 15); c.fillRect(6, -9, 24, 9);
+    c.fillStyle = "#111"; c.fillRect(8, -7, 9, 6); c.fillRect(19, -7, 9, 6);
+    c.fillStyle = "#888"; c.fillRect(4, -12, 28, 2); c.fillRect(2, -15, 32, 2);
+    c.fillStyle = "#000";
+    c.beginPath(); c.arc(8, 15, 4, 0, Math.PI*2); c.fill();
+    c.beginPath(); c.arc(32, 15, 4, 0, Math.PI*2); c.fill();
+    if(isPlayer) { c.fillStyle="#00ff66"; c.fillRect(18, -20, 4, 4); }
+    c.restore();
+  }
+
+  function drawCorsa(c, x, y) {
+    c.save(); c.translate(x, y);
+    c.fillStyle = "#00f0ff"; c.fillRect(0, 2, 38, 13); c.fillRect(8, -7, 20, 8);
+    c.fillStyle = "#111"; c.fillRect(10, -5, 7, 5); c.fillRect(19, -5, 7, 5);
+    c.fillStyle = "#000";
+    c.beginPath(); c.arc(8, 15, 4, 0, Math.PI*2); c.fill();
+    c.beginPath(); c.arc(30, 15, 4, 0, Math.PI*2); c.fill();
+    c.restore();
+  }
+
+  function drawGol(c, x, y) {
+    c.save(); c.translate(x, y);
+    c.fillStyle = "#cc0000"; c.fillRect(0, 0, 42, 15); c.fillRect(8, -8, 22, 8);
+    c.fillStyle = "#111"; c.fillRect(10, -6, 8, 5); c.fillRect(20, -6, 8, 5);
+    c.fillStyle = "#000";
+    c.beginPath(); c.arc(8, 15, 4, 0, Math.PI*2); c.fill();
+    c.beginPath(); c.arc(32, 15, 4, 0, Math.PI*2); c.fill();
+    c.restore();
+  }
+
+  function drawDMW(c, x, y) {
+    c.save(); c.translate(x, y);
+    c.fillStyle = "#2255ff"; c.fillRect(0, 2, 44, 14); c.fillRect(10, -7, 22, 7);
+    c.fillStyle = "#111"; c.fillRect(12, -5, 8, 5); c.fillRect(22, -5, 8, 5);
+    c.fillStyle = "#000";
+    c.beginPath(); c.arc(9, 16, 4, 0, Math.PI*2); c.fill();
+    c.beginPath(); c.arc(35, 16, 4, 0, Math.PI*2); c.fill();
+    c.restore();
+  }
+
+  function drawFernari(c, x, y) {
+    c.save(); c.translate(x, y);
+    c.fillStyle = "#ff2200"; c.fillRect(0, 4, 46, 12); c.fillRect(14, -6, 18, 6);
+    c.fillStyle = "#111"; c.fillRect(16, -4, 6, 4); c.fillRect(24, -4, 6, 4);
+    c.fillStyle = "#000";
+    c.beginPath(); c.arc(10, 16, 4, 0, Math.PI*2); c.fill();
+    c.beginPath(); c.arc(36, 16, 4, 0, Math.PI*2); c.fill();
+    c.restore();
+  }
+
+  function drawMalaren(c, x, y) {
+    c.save(); c.translate(x, y);
+    c.fillStyle = "#ff8800"; c.fillRect(0, 4, 48, 12); c.fillRect(15, -6, 18, 6);
+    c.fillStyle = "#111"; c.fillRect(17, -4, 6, 4); c.fillRect(25, -4, 6, 4);
+    c.fillStyle = "#000";
+    c.beginPath(); c.arc(10, 16, 4, 0, Math.PI*2); c.fill();
+    c.beginPath(); c.arc(38, 16, 4, 0, Math.PI*2); c.fill();
+    c.restore();
+  }
+
+  function render() {
+    ctx.clearRect(0, 0, 400, 200);
+
+    ctx.fillStyle = "#05070e"; ctx.fillRect(0, 0, 400, 90);
+    ctx.fillStyle = "#111622"; ctx.fillRect(0, 90, 400, 110);
+
+    ctx.fillStyle = "#009c3b"; ctx.fillRect(0, 10, 400, 12);
+    ctx.fillStyle = "#ffdf00"; ctx.font = "8px 'Press Start 2P'"; ctx.fillText("AV. DAS TORRES - 250M", 110, 20);
+
+    ctx.fillStyle = "#1c2333"; ctx.fillRect(80, 130, 40, 12);
+    ctx.fillStyle = "#ffdf00";
+    for (let i = -20; i < 420; i += 40) {
+      let lx = i - ((state.pDistance * 3.5) % 40);
+      ctx.fillRect(lx, 145, 18, 2);
+    }
+
+    if (state.raceState === 'go') {
+      let maxGearSpeed = state.gear * 0.45;
+
+      if (state.accelerating) {
+        let accelRate = (state.hp * 0.000012) + (state.gear * 0.002);
+        state.pSpeed = Math.min(state.pSpeed + accelRate, maxGearSpeed);
+      } else {
+        state.pSpeed = Math.max(state.pSpeed - 0.008, 0);
+      }
+
+      let targetEnemySpeed = (state.enemyHp * 0.00035);
+      if (state.eSpeed < targetEnemySpeed) {
+        state.eSpeed += 0.002;
+      }
+
+      state.pDistance += state.pSpeed;
+      state.eDistance += state.eSpeed;
+    }
+
+    let playerX = 20 + (state.pDistance - state.eDistance) * 2.8;
+    let enemyX = 20 + (state.eDistance - state.pDistance) * 2.8;
+
+    playerX = Math.max(10, Math.min(330, playerX));
+    enemyX = Math.max(10, Math.min(330, enemyX));
+
+    if (state.enemyCar.includes('Corsa')) drawCorsa(ctx, enemyX, 115);
+    else if (state.enemyCar.includes('Gol')) drawGol(ctx, enemyX, 115);
+    else if (state.enemyCar.includes('DMW')) drawDMW(ctx, enemyX, 115);
+    else if (state.enemyCar.includes('Fernari')) drawFernari(ctx, enemyX, 115);
+    else drawGol(ctx, enemyX, 115);
+
+    if (state.car.includes('Corsa')) drawCorsa(ctx, playerX, 160);
+    else if (state.car.includes('Gol')) drawGol(ctx, playerX, 160);
+    else if (state.car.includes('DMW')) drawDMW(ctx, playerX, 160);
+    else if (state.car.includes('Fernari')) drawFernari(ctx, playerX, 160);
+    else if (state.car.includes('Malaren')) drawMalaren(ctx, playerX, 160);
+    else drawUno(ctx, playerX, 160, true);
+
+    if (state.isRacing && state.raceState === 'go') {
+      if (state.pDistance >= 250 || state.eDistance >= 250) {
+        state.isRacing = false;
+        state.raceState = 'finished';
+        
+        document.getElementById('race-controls').style.display = 'none';
+        document.getElementById('main-tabs').style.display = 'flex';
+        document.getElementById('tab-racha').style.display = 'flex';
+
+        if (state.pDistance > state.eDistance) {
+          let prize = state.bet * 2;
+          state.money += prize;
+          state.rep += 1;
+          document.getElementById('status-banner').innerText = "LEVOU A APOSTA!";
+          log(`🏆 VITÓRIA! Faturou R$ ${prize.toLocaleString('pt-BR')} e ganhou reputação!`, "#00ff66");
+        } else {
+          document.getElementById('status-banner').innerText = "PERDEU O RACHA!";
+          log(`❌ DERROTA! O ${state.enemyCar} levou sua grana!`, "#ff0055");
+        }
+      }
+    }
+
+    updateUI();
+    requestAnimationFrame(render);
+  }
+
+  updateUI();
+  render();
+</script>
+</body>
+</html>
